@@ -4,8 +4,8 @@ project(test LANGUAGES CXX)
 
 add_executable(vec3test
     src/main.cpp
-    include/vec3.h
     src/vec3.cpp
+    src/ray.cpp
 )
 
 target_compile_features(vec3test PRIVATE cxx_std_20)
