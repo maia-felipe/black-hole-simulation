@@ -16,6 +16,8 @@ add_executable(raytracer
     src/main.cpp
     src/vec3.cpp
     src/ray.cpp
+    src/stb_image_write_implementation.cpp
+    src/image.cpp
 )
 
 target_compile_features(raytracer PRIVATE cxx_std_20)
