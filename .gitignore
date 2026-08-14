@@ -2,4 +2,8 @@ build/
 archive/
 plan/
 
+# Generated renders
+*.png
+*.ppm
+
 CLAUDE.md
