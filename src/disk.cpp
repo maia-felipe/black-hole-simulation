@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <vector>
 
 namespace {
 
@@ -90,7 +91,16 @@ double disk_temperature(const Disk& disk, double r) {
     return disk.t_peak * std::pow(flux_shape(r) / flux_peak(), 0.25);
 }
 
-Vec3 blackbody_rgb(double T) {
+namespace {
+
+// Temperature grid for the cached path below. The disk peaks at ~10500 K and the
+// strongest blueshift is g ~ 1.4, so 20000 K covers the scene with room to spare;
+// 1024 steps put the entries ~20 K apart, far finer than a visible colour change.
+constexpr double BB_T_MAX   = 20000.0;
+constexpr int    BB_ENTRIES = 1024;
+
+// The honest computation: a Planck spectrum integrated against the CIE curves.
+Vec3 blackbody_rgb_exact(double T) {
     if (T <= 0.0) return Vec3(0.0, 0.0, 0.0);
 
     double X = 0.0, Y = 0.0, Z = 0.0;
@@ -114,4 +124,37 @@ Vec3 blackbody_rgb(double T) {
 
     // Blackbodies at the extremes fall outside the sRGB gamut; clip to the edge.
     return Vec3(std::max(0.0, rgb.x), std::max(0.0, rgb.y), std::max(0.0, rgb.z));
+}
+
+const std::vector<Vec3>& blackbody_table() {
+    static const std::vector<Vec3> table = [] {
+        std::vector<Vec3> t;
+        t.reserve(BB_ENTRIES + 1);
+        for (int i = 0; i <= BB_ENTRIES; ++i) {
+            t.push_back(blackbody_rgb_exact(i * (BB_T_MAX / BB_ENTRIES)));
+        }
+        return t;
+    }();
+    return table;
+}
+
+}  // namespace
+
+Vec3 blackbody_rgb(double T) {
+    if (T <= 0.0) return Vec3(0.0, 0.0, 0.0);
+
+    // Above the table, fall through to the exact path: it never happens in practice,
+    // and it keeps the function correct for any caller rather than merely for ours.
+    if (T >= BB_T_MAX) return blackbody_rgb_exact(T);
+
+    // 81 Planck evaluations per call is far too much for a per-sample hot path. The
+    // curve is smooth in T, so a linear interpolation between neighbouring entries is
+    // visually exact -- the residual is orders of magnitude below one 8-bit step.
+    const std::vector<Vec3>& table = blackbody_table();
+
+    const double x = T * (BB_ENTRIES / BB_T_MAX);
+    const int    i = static_cast<int>(x);
+    const double f = x - i;
+
+    return (1.0 - f) * table[i] + f * table[i + 1];
 }
