@@ -17,6 +17,14 @@ inline State2 operator*(double s, const State2& a) {
     return State2{s * a.u, s * a.du};
 }
 
+// Integration accuracy, chosen per frame rather than baked in at compile time: an
+// interactive preview trades sky-direction accuracy for frame rate, while a final
+// render does not. See the Phase 6 notes in CLAUDE.md for what the trade costs.
+struct TraceQuality {
+    double d_phi   = 0.01;                            // step in phi, radians
+    double phi_max = 40.0 * 3.14159265358979323846;   // spiral cutoff
+};
+
 enum class PhotonFate {
     Captured,  // crossed the event horizon (or asymptotically trapped)
     Escaped,   // reached the far field; `direction` is the outgoing direction
@@ -37,4 +45,5 @@ struct PhotonResult {
 // the disk is optically thick, and nothing behind it contributes.
 //
 // Units: G = c = M = 1, so the horizon sits at r = 2 and the photon sphere at r = 3.
-PhotonResult trace_photon(const Vec3& origin, const Vec3& dir, const Disk& disk);
+PhotonResult trace_photon(const Vec3& origin, const Vec3& dir, const Disk& disk,
+                          const TraceQuality& quality = {});

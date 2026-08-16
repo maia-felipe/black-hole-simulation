@@ -10,8 +10,6 @@ constexpr double PI = 3.14159265358979323846;
 constexpr double MASS       = 1.0;
 constexpr double R_HORIZON  = 2.0 * MASS;
 constexpr double R_FAR      = 1000.0;
-constexpr double D_PHI      = 0.01;
-constexpr double PHI_MAX    = 40.0 * PI;  // give up: photon is asymptotically trapped
 constexpr double RADIAL_EPS = 1e-12;
 
 // Binet form of the null geodesic in Schwarzschild:
@@ -32,7 +30,8 @@ PhotonResult escaped(const Vec3& direction) {
 
 }  // namespace
 
-PhotonResult trace_photon(const Vec3& origin, const Vec3& dir, const Disk& disk) {
+PhotonResult trace_photon(const Vec3& origin, const Vec3& dir, const Disk& disk,
+                          const TraceQuality& quality) {
     const double r0 = origin.length();
     if (r0 <= R_HORIZON) return captured();
 
@@ -76,8 +75,10 @@ PhotonResult trace_photon(const Vec3& origin, const Vec3& dir, const Disk& disk)
     State2 y{1.0 / r0,
              -std::sqrt(1.0 - 2.0 * MASS / r0) * cos_psi / (r0 * sin_psi)};
 
-    for (double phi = 0.0; phi < PHI_MAX; phi += D_PHI) {
-        if (!coplanar && phi_cross < phi + D_PHI) {
+    const double d_phi = quality.d_phi;
+
+    for (double phi = 0.0; phi < quality.phi_max; phi += d_phi) {
+        if (!coplanar && phi_cross < phi + d_phi) {
             const State2 at_plane = rk4_step(y, phi, phi_cross - phi, binet);
             const double r        = at_plane.u > 0.0 ? 1.0 / at_plane.u : 0.0;
 
@@ -99,7 +100,7 @@ PhotonResult trace_photon(const Vec3& origin, const Vec3& dir, const Disk& disk)
             phi_cross += PI;  // missed the annulus; wait for the next crossing
         }
 
-        y = rk4_step(y, phi, D_PHI, binet);
+        y = rk4_step(y, phi, d_phi, binet);
 
         if (y.u >= 1.0 / R_HORIZON) return captured();
 
@@ -108,7 +109,12 @@ PhotonResult trace_photon(const Vec3& origin, const Vec3& dir, const Disk& disk)
             // which are essentially undeflected.
             if (y.u <= 0.0) return escaped(dir);
 
-            const double phi_end = phi + D_PHI;
+            // NOTE: projecting du/dphi back onto the exact first integral
+            // (du/dphi)^2 + u^2 - 2*M*u^3 = 1/b^2 was tried here and measured to be a
+            // bit-for-bit no-op at D_PHI = 0.01, so it is deliberately absent. See the
+            // Phase 6 notes in CLAUDE.md: the error that limits the step size is the
+            // phase error in u itself, not drift in du/dphi.
+            const double phi_end = phi + d_phi;
             const double r       = 1.0 / y.u;
             const double dr      = -y.du / (y.u * y.u);
 
