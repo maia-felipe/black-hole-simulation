@@ -6,4 +6,7 @@ plan/
 *.png
 *.ppm
 
+# ...except the ones the README shows
+!docs/*.png
+
 CLAUDE.md
