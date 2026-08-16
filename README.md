@@ -225,6 +225,8 @@ offline render trace with identical code and the offline path stays usable as th
 
 ## Credits
 
+This project was sparked by this ([video](https://www.youtube.com/watch?v=8-B6ryuBkCM&pp=ygUmSSBidWlsdCBhIGJsYWNrIGhvbGUgc2ltdWxhdGlvbiBpbiBjcHA%3D)) from kavan.
+
 The background is the ESO / S. Brunier all-sky Milky Way panorama
 ([eso0932a](https://www.eso.org/public/images/eso0932a/)).
 
