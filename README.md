@@ -9,14 +9,14 @@ in the image come out of that integration and not out of post-processing.
 There are two binaries: `raytracer` writes a PNG, and `viewer` opens a window you can orbit
 around while it renders.
 
-![A black hole seen almost edge on, its accretion disk stretched into a flat white band with a second band lifted over the top of the shadow](docs/render.png)
+![A black hole seen almost edge on, its accretion disk stretched into a flat white band with a second band lifted over the top of the shadow:](docs/render.png)
 
 The default scene. The disk runs from the ISCO at 6M out to 36M, seen from 100M away and 6
 degrees above the disk plane. The band arcing over the shadow is the far side of the disk,
 bent over the hole by gravitational lensing, and the arc below it is that same far side seen
 from underneath.
 
-![The same black hole from 17 degrees above the disk plane, the disk warped into a lens shape around a small dark circle](docs/render-tilted.png)
+![The same black hole from 17 degrees above the disk plane, the disk warped into a lens shape around a small dark circle:](docs/render-tilted.png)
 
 The same scene from 17 degrees up. The dark circle is roughly 2.6 times wider than the
 horizon itself, since photons passing near the photon sphere at `r = 3M` still fall in.
